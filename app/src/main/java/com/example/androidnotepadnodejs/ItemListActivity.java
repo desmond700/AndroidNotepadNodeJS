@@ -1,12 +1,12 @@
 package com.example.androidnotepadnodejs;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -18,14 +18,11 @@ import android.widget.TextView;
 
 import com.example.androidnotepadnodejs.util.Datetime;
 import com.example.androidnotepadnodejs.util.Note;
-import com.example.androidnotepadnodejs.util.RetrieveNotes;
+import com.example.androidnotepadnodejs.util.HttpRetrieveNotesAsync;
 import com.github.clans.fab.FloatingActionButton;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 
 /**
  * An activity representing a list of Items. This activity
@@ -44,6 +41,7 @@ public class ItemListActivity extends AppCompatActivity {
 
     private boolean mTwoPane;
     private ArrayList<Note> notes;
+    private Datetime mDatetime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,15 +52,15 @@ public class ItemListActivity extends AppCompatActivity {
         assert recyclerView != null;
 
 
-        AsyncTask<Context, Void, String> task = new RetrieveNotes(new RetrieveNotes.AsyncResponse(){
+        AsyncTask<String, Void, String> task = new HttpRetrieveNotesAsync(new HttpRetrieveNotesAsync.AsyncResponse(){
 
             @Override
             public void processFinish(ArrayList<Note> output) {
                 notes = output;
-                Log.d("processFinish",output.get(0).note);
                 setupRecyclerView((RecyclerView) recyclerView);
             }
-        }).execute();
+
+        }, this).execute();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -99,6 +97,7 @@ public class ItemListActivity extends AppCompatActivity {
         private final ItemListActivity mParentActivity;
         private final List<Note> mValues;
         private final boolean mTwoPane;
+
         private final View.OnClickListener mOnClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -148,12 +147,11 @@ public class ItemListActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
+            mDatetime = new Datetime(mValues.get(position).date);
             holder.mIdView.setText(mValues.get(position).title);
-            holder.mContentView.setText(mValues.get(position).date);
-
+            holder.mContentView.setText(mDatetime.getDate());
             holder.itemView.setTag(mValues.get(position));
             holder.itemView.setOnClickListener(mOnClickListener);
-            //holder.itemView.setOnClickListener(mClearBtnOnClickListener);
         }
 
         @Override

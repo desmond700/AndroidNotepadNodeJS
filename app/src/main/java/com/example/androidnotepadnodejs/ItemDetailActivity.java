@@ -2,11 +2,15 @@ package com.example.androidnotepadnodejs;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.sqlite.SQLiteDatabase;
+import android.os.AsyncTask;
 import android.os.Bundle;
 
+import com.example.androidnotepadnodejs.util.HttpDeleteNoteAsync;
+import com.example.androidnotepadnodejs.util.Note;
 import com.github.clans.fab.FloatingActionButton;
+
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -65,7 +69,7 @@ public class ItemDetailActivity extends AppCompatActivity {
             fab.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    clearItem(Integer.parseInt(getIntent().getStringExtra(ItemDetailFragment.ARG_ITEM_ID)));
+                    clearItem(getIntent().getStringExtra(ItemDetailFragment.ARG_ITEM_ID));
                 }
             });
         }
@@ -88,7 +92,36 @@ public class ItemDetailActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void clearItem(final int value){
+    public void SnackBar(String text){
+        Snackbar snackbar = Snackbar.make(this.findViewById(android.R.id.content), text, Snackbar.LENGTH_LONG);
+        snackbar.getView().setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.colorPrimaryDark));
+        snackbar.setDuration(2200);
+        snackbar.show();
+        snackbar.addCallback(new Snackbar.Callback() {
+
+            @Override
+            public void onDismissed(Snackbar snackbar, int event) {
+                if (event == Snackbar.Callback.DISMISS_EVENT_TIMEOUT) {
+                    // Snackbar closed on its own
+                    try{
+                        Thread.sleep(450);
+                        // Then do something meaningful...
+                        Intent intent = new Intent(getApplicationContext(), ItemListActivity.class);
+                        startActivity(intent);
+                    }catch(InterruptedException e){
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onShown(Snackbar snackbar) {
+
+            }
+        });
+    }
+
+    public void clearItem(final String value){
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         alertDialogBuilder.setMessage("Are you sure, You want to make this decision?");
         alertDialogBuilder.setPositiveButton("yes",
@@ -96,9 +129,26 @@ public class ItemDetailActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface arg0, int arg1) {
 
-                        Intent intent = new Intent(getApplicationContext(), ItemListActivity.class);
-                        finish();
-                        startActivity(intent);
+                        AsyncTask<String, Void, Integer> task = new HttpDeleteNoteAsync(new HttpDeleteNoteAsync.AsyncResponse() {
+                            @Override
+                            public void processFinish(int output) {
+                                Log.d("resultCode",Integer.toString(output));
+                                switch (output){
+                                    case 200:
+                                        SnackBar("Note deleted successfully");
+                                        break;
+                                    case 204:
+                                        SnackBar("Server did not provide a response to your request");
+                                        break;
+                                    case 404:
+                                        SnackBar("Request was unable to be process, due to error in syntax");
+                                        break;
+                                }
+                            }
+                        }, value);
+
+                        task.execute();
+
                     }
                 });
 

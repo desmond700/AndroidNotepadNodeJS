@@ -19,20 +19,13 @@ public class JsonParse {
     }
 
     public boolean isSuccess(String response) {
+        if (response != null) {
+            return true;
+        } else {
 
-        try {
-            JSONArray jsonObject = new JSONArray(response);
-            if (!jsonObject.isNull(0)) {
-                return true;
-            } else {
-
-                return false;
-            }
-
-        } catch (JSONException e) {
-            e.printStackTrace();
+            return false;
         }
-        return false;
+
     }
 
     public String getErrorCode(String response) {
@@ -48,7 +41,7 @@ public class JsonParse {
     }
 
     public ArrayList<Note> getInfo(String response) {
-        Log.d("getInfo json: ", response.toString());
+        Log.d("getInfo json: ", response);
         ArrayList<Note> noteList = new ArrayList<>();
         try {
             JSONArray jsonArray = new JSONArray(response);
@@ -69,5 +62,24 @@ public class JsonParse {
             e.printStackTrace();
         }
         return noteList;
+    }
+
+    public Note getNote(String response) {
+        Log.d("getInfo json: ", response);
+        Note noteModel = new Note();
+        try {
+            JSONObject jsonobj = new JSONObject(response);
+            if (jsonobj.length() > 0) {
+                noteModel.set_ID(jsonobj.getString("_id"));
+                noteModel.setTitle(jsonobj.getString("title"));
+                noteModel.setNote(jsonobj.getString("note"));
+                noteModel.setDate(jsonobj.getString("date"));
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+            Log.d("json error", e.getMessage());
+        }
+        return noteModel;
     }
 }

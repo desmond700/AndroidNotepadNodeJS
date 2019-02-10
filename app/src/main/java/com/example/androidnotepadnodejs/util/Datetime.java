@@ -140,4 +140,9 @@ public class Datetime {
         }
         return "";
     }
+
+    public String getDateTime(){
+
+        return getDate() + ", " + getTime();
+    }
 }

@@ -1,8 +1,7 @@
 package com.example.androidnotepadnodejs;
 
 import android.app.Activity;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
+import android.os.AsyncTask;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -11,6 +10,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import com.example.androidnotepadnodejs.util.Datetime;
+import com.example.androidnotepadnodejs.util.HttpRetrieveNoteDetailsAsync;
+import com.example.androidnotepadnodejs.util.HttpRetrieveNotesAsync;
+import com.example.androidnotepadnodejs.util.Note;
+
+import java.util.ArrayList;
 
 /**
  * A fragment representing a single Item detail screen.
@@ -31,7 +37,8 @@ public class ItemDetailFragment extends Fragment {
     private String mTitle;
     private String mNote;
     private String mDate;
-
+    private Activity activity;
+    private Datetime mDatetime;
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
@@ -47,15 +54,7 @@ public class ItemDetailFragment extends Fragment {
             // Load the dummy content specified by the fragment
             // arguments. In a real-world scenario, use a Loader
             // to load content from a content provider.
-
-            readNotes(Integer.parseInt(getArguments().getString(ARG_ITEM_ID)));
-
-            Activity activity = this.getActivity();
-            CollapsingToolbarLayout appBarLayout = activity.findViewById(R.id.toolbar_layout);
-            if (appBarLayout != null) {
-                appBarLayout.setTitle(mTitle);
-            }
-
+            activity = this.getActivity();
 
         }
     }
@@ -63,18 +62,36 @@ public class ItemDetailFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.item_detail, container, false);
+        final View rootView = inflater.inflate(R.layout.item_detail, container, false);
+        final CollapsingToolbarLayout appBarLayout = activity.findViewById(R.id.toolbar_layout);
 
-        // Show the dummy content as text in a TextView.
-        if (mNote != null) {
-            ((TextView) rootView.findViewById(R.id.item_detail)).setText(mNote);
-            ((TextView) rootView.findViewById(R.id.item_detail_date)).setText(mDate);
-        }
+        AsyncTask<String, Void, String> task = new HttpRetrieveNoteDetailsAsync(new HttpRetrieveNoteDetailsAsync.AsyncResponse() {
+            @Override
+            public void processFinish(Note output) {
+                mTitle = output.title;
+                mNote = output.note;
+                mDate = output.date;
+                mDatetime = new Datetime(mDate);
+                if (appBarLayout != null) {
+                    appBarLayout.setTitle(mTitle);
+                }
+
+                // Show the dummy content as text in a TextView.
+                if (mNote != null) {
+                    ((TextView) rootView.findViewById(R.id.item_detail)).setText(mNote);
+                    ((TextView) rootView.findViewById(R.id.item_detail_date)).setText(mDatetime.getDateTime());
+                }
+            }
+
+        }, getContext(), getArguments().getString(ARG_ITEM_ID)).execute();
 
         return rootView;
     }
 
-    public void readNotes(int id){
+    public void readNote(String id){
+
+
+
 
 
     }

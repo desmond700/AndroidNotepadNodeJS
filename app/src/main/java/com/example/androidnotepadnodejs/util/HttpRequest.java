@@ -1,14 +1,19 @@
 package com.example.androidnotepadnodejs.util;
 
 import android.util.Log;
+
+import com.google.gson.Gson;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
@@ -44,14 +49,17 @@ public class HttpRequest {
     private HttpURLConnection con;
     private OutputStream os;
     //After instantiation, when opening connection - IOException can occur
-    public HttpRequest(URL url)throws IOException{
+    public HttpRequest(URL url) throws IOException {
         this.url=url;
         con = (HttpURLConnection)this.url.openConnection();
+
     }
     //Can be instantiated with String representation of url, force caller to check for IOException which can be thrown
-    public HttpRequest(String url)throws IOException{
+    public HttpRequest(String url) throws IOException {
+
         this.url = new URL(url);
         con = (HttpURLConnection)this.url.openConnection();
+
         Log.d("parameters", url);
     }
 
@@ -89,15 +97,87 @@ public class HttpRequest {
         return this;
     }
 
-    public StringBuilder json(HttpRequest.Method method) throws IOException{
+    public String json(HttpRequest.Method method) throws IOException{
+
+        //testConnect();
+
         con.setDoInput(true);
         con.setRequestProperty("Content-Type", "application/json");
         con.setRequestMethod(method.toString());
-        BufferedReader br=new BufferedReader(new InputStreamReader(con.getInputStream()));
-        StringBuilder response=new StringBuilder();
-        for(String line;(line=br.readLine())!=null;)response.append(line+"\n");
-        Log.d("ressss",response.toString());
-        return response;
+        Log.d("tessst","testing");
+        Boolean isConnected = testConnect();
+        Log.d("tessstcon",Boolean.toString(isConnected));
+        if(isConnected) {
+            BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            StringBuilder response = new StringBuilder();
+            for (String line; (line = br.readLine()) != null; ) response.append(line + "\n");
+            Log.d("ressss", response.toString());
+            return response.toString();
+        }
+
+        return "CONNECTIONFAILED";
+    }
+
+     public int postData (HttpRequest.Method method, Note note) throws IOException, JSONException {
+         Gson gson = new Gson();
+         String jsonObj = gson.toJson(note);
+         Log.d("jsonObj", jsonObj);
+         //add request header
+         con.setDoInput(true);
+         con.setRequestMethod(method.toString());
+         con.setRequestProperty("Accept", "application/json");
+         con.setRequestProperty("Content-Type", "application/json");
+
+         // Send post request
+         con.setDoOutput(true);
+         OutputStreamWriter wr = new OutputStreamWriter(con.getOutputStream());
+         wr.write(jsonObj);
+         wr.flush();
+         wr.close();
+
+         int responseCode = con.getResponseCode();
+         Log.d("Post Response","\nSending 'POST' request to URL : " + url);
+         Log.d("Post Response","Post parameters : " + jsonObj.toString());
+         Log.d("Post Response","Response Code : " + responseCode);
+
+         BufferedReader in = new BufferedReader(
+                 new InputStreamReader(con.getInputStream()));
+         String inputLine;
+         StringBuffer response = new StringBuffer();
+
+         while ((inputLine = in.readLine()) != null) {
+             response.append(inputLine);
+         }
+         in.close();
+
+         //print result
+         Log.d("Post Response",response.toString());
+
+         return responseCode;
+    }
+
+    public int deleteData (HttpRequest.Method method) throws IOException {
+        con.setDoInput(true);
+        con.setInstanceFollowRedirects(false);
+        con.setRequestMethod(method.toString());
+        con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        con.setRequestProperty("charset", "utf-8");
+        con.setUseCaches (false);
+
+        System.out.println("Response code: " + Integer.toString(con.getResponseCode()));
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream()));
+        String line, responseText = "";
+        while ((line = br.readLine()) != null) {
+            System.out.println("LINE: "+line);
+            responseText += line;
+        }
+        //print result
+        Log.d("delete Response",responseText);
+        br.close();
+        con.disconnect();
+
+        return con.getResponseCode();
     }
 
     /**
@@ -112,6 +192,21 @@ public class HttpRequest {
             con.setRequestProperty(h[0],h[1]);
         }
         return this;
+    }
+
+    public Boolean testConnect() {
+        Boolean val;
+        try {
+            Boolean connectionOK = HttpURLConnection.HTTP_OK == con.getResponseCode();
+            Log.d("Connection status","OK");
+            val = true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.d("Connection status","Error creating HTTP connection");
+            val = false;
+        }
+        Log.d("val", Boolean.toString(val));
+        return val;
     }
 
     /**

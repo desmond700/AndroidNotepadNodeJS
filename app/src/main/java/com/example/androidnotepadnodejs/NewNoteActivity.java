@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.AsyncTask;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
@@ -25,6 +26,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.androidnotepadnodejs.util.Datetime;
+import com.example.androidnotepadnodejs.util.HttpAddNotesAsync;
+import com.example.androidnotepadnodejs.util.Note;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -123,13 +126,15 @@ public class NewNoteActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.action_done:
                 // User chose the "Settings" item, show the app settings UI...
-
-                if(noteTitle.isEmpty()){
-                    SnackBar("Enter Note's title");
+                if(noteTitle.isEmpty() && noteContent.isEmpty()){
+                    SnackBar("Enter title and content");
+                }
+                else if(noteTitle.isEmpty()){
+                    SnackBar("Enter title");
                 }else if(noteContent.isEmpty()) {
-                    SnackBar("Enter Note's content");
+                    SnackBar("Enter content");
                 }else{
-                    noteInsert(noteTitle, noteContent);
+                    postNoteToServer(noteTitle, noteContent);
                 }
 
                 return true;
@@ -145,7 +150,30 @@ public class NewNoteActivity extends AppCompatActivity {
     public void SnackBar(String text){
         Snackbar snackbar = Snackbar.make(this.findViewById(android.R.id.content), text, Snackbar.LENGTH_LONG);
         snackbar.getView().setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.colorPrimaryDark));
+        snackbar.setDuration(2200);
         snackbar.show();
+        snackbar.addCallback(new Snackbar.Callback() {
+
+            @Override
+            public void onDismissed(Snackbar snackbar, int event) {
+                if (event == Snackbar.Callback.DISMISS_EVENT_TIMEOUT) {
+                    // Snackbar closed on its own
+                    try{
+                        Thread.sleep(450);
+                        // Then do something meaningful...
+                        Intent intent = new Intent(getApplicationContext(), ItemListActivity.class);
+                        startActivity(intent);
+                    }catch(InterruptedException e){
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onShown(Snackbar snackbar) {
+
+            }
+        });
     }
 
     public static String getCurrentTimeStamp(){
@@ -162,9 +190,30 @@ public class NewNoteActivity extends AppCompatActivity {
         }
     }
 
-    public void noteInsert(String title, String note){
+    public void postNoteToServer(String title, String noteTxt){
+        datetime = new Datetime(getCurrentTimeStamp());
 
+        Note note = new Note(null, title, noteTxt, getCurrentTimeStamp());
 
+        AsyncTask<String, Void, Integer> addNote = new HttpAddNotesAsync(new HttpAddNotesAsync.AsyncResponse() {
+            @Override
+            public void processFinish(int result) {
+                Log.d("resultCode",Integer.toString(result));
+                switch (result){
+                    case 200:
+                        Log.d("output","200");
+                        SnackBar("Note added successfully");
+                        break;
+                    case 204:
+                        SnackBar("Server did not provide a response to your request");
+                        break;
+                    case 404:
+                        SnackBar("Request was unable to be process, due to error in syntax");
+                        break;
+                }
+            }
+        },this, note);
+        addNote.execute();
     }
 }
 
