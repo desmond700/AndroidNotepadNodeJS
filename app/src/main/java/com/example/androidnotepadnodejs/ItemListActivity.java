@@ -21,6 +21,9 @@ import com.example.androidnotepadnodejs.util.Note;
 import com.example.androidnotepadnodejs.util.HttpRetrieveNotesAsync;
 import com.github.clans.fab.FloatingActionButton;
 
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,19 +51,16 @@ public class ItemListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_item_list);
 
-        final View recyclerView = findViewById(R.id.item_list);
-        assert recyclerView != null;
-
-
-        AsyncTask<String, Void, String> task = new HttpRetrieveNotesAsync(new HttpRetrieveNotesAsync.AsyncResponse(){
-
+        AsyncTask<Void, Void, Boolean> task = new IsHostReachable(new AsyncResponse() {
             @Override
-            public void processFinish(ArrayList<Note> output) {
-                notes = output;
-                setupRecyclerView((RecyclerView) recyclerView);
+            public void processFinish(Boolean isConnected) {
+                if(isConnected){
+                    retrieveNotes();
+                }
             }
+        });
+        task.execute();
 
-        }, this).execute();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -84,6 +84,22 @@ public class ItemListActivity extends AppCompatActivity {
         }
 
 
+    }
+
+    public void retrieveNotes(){
+        final View recyclerView = findViewById(R.id.item_list);
+        assert recyclerView != null;
+
+        AsyncTask<String, Void, String> task = new HttpRetrieveNotesAsync(new HttpRetrieveNotesAsync.AsyncResponse(){
+
+            @Override
+            public void processFinish(ArrayList<Note> output) {
+                notes = output;
+                setupRecyclerView((RecyclerView) recyclerView);
+            }
+
+        }, this);
+        task.execute();
     }
 
 
@@ -171,10 +187,66 @@ public class ItemListActivity extends AppCompatActivity {
         }
     }
 
-    public static List<Note> readNotes(Context context){
-        List<Note> list = new ArrayList<Note>();
-
-        return list;
+    public interface AsyncResponse{
+        void processFinish(Boolean isConnected);
     }
 
+    public class IsHostReachable extends AsyncTask<Void, Void, Boolean>  {
+
+        public AsyncResponse delegate;
+
+        public IsHostReachable(AsyncResponse delegate) {
+            this.delegate = delegate;
+        }
+
+        protected Boolean doInBackground(Void ...params) {
+            Log.d("isHostAvailable", "run");
+            Boolean isConnected = isHostAvailable("10.0.2.2", 3000,1000);
+
+            return isConnected;
+        }
+
+        protected void onPostExecute(Boolean result) {
+            //do something with response
+            Log.d("isHostAvailable", Boolean.toString(result));
+            delegate.processFinish(result);
+            if(!result){
+                noConnectionDialog();
+            }
+
+        }
+    };
+
+    public static boolean isHostAvailable(final String host, final int port, final int timeout) {
+        try (final Socket socket = new Socket()) {
+            final InetAddress inetAddress = InetAddress.getByName(host);
+            final InetSocketAddress inetSocketAddress = new InetSocketAddress(inetAddress, port);
+
+            socket.connect(inetSocketAddress, timeout);
+            return true;
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public void noConnectionDialog(){
+
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        alertDialogBuilder.setTitle("Info");
+        alertDialogBuilder.setIcon(android.R.drawable.ic_dialog_alert);
+        alertDialogBuilder.setMessage("Server connection failed, Cross check your internet connectivity, or make sure your server is running and try again");
+        alertDialogBuilder.setPositiveButton("Ok",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface arg0, int arg1) {
+
+                        //Intent intent = new Intent(getApplicationContext(), ItemListActivity.class);
+                    }
+                });
+
+
+        AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.show();
+    }
 }

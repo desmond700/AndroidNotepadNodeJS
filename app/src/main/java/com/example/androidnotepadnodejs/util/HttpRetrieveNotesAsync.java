@@ -39,9 +39,6 @@ public class HttpRetrieveNotesAsync extends AsyncTask<String, Void, String> {
 
             response = req.json(HttpRequest.Method.GET);
             Log.d("response",response);
-            if(response.equals("CONNECTIONFAILED")){
-
-            }
 
         } catch (MalformedURLException e) {
             e.printStackTrace();
@@ -62,41 +59,18 @@ public class HttpRetrieveNotesAsync extends AsyncTask<String, Void, String> {
 
     public void onTaskCompleted(String response) {
         Log.d("result", response);
-        if(!response.equals("CONNECTIONFAILED")) {
-            JsonParse jsonParse = new JsonParse();
-            ArrayList<Note> noteArrayList;
-            if (jsonParse.isSuccess(response)) {
-                //JsonUtils.removeSimpleProgressDialog();  //will remove progress dialog
-                noteArrayList = jsonParse.getInfo(response);
-                Log.d("jsonParseresponse", response);
-                delegate.processFinish(noteArrayList);
-            } else {
-                Toast.makeText(context, jsonParse.getErrorCode(response), Toast.LENGTH_SHORT).show();
-                Log.d("jsonParse.getErrorCode(response)", jsonParse.getErrorCode(response));
-            }
-        }else{
-            Log.d("no network connect", "CONNECTFAILED");
-            noConnectionDialog();
+        JsonParse jsonParse = new JsonParse();
+        ArrayList<Note> noteArrayList;
+        if (jsonParse.isSuccess(response)) {
+            //JsonUtils.removeSimpleProgressDialog();  //will remove progress dialog
+            noteArrayList = jsonParse.getInfo(response);
+            delegate.processFinish(noteArrayList);
+        } else {
+            Toast.makeText(context, jsonParse.getErrorCode(response), Toast.LENGTH_SHORT).show();
+            Log.d("jsonParse.getErrorCode(response)", jsonParse.getErrorCode(response));
         }
+
     }
 
-    public void noConnectionDialog(){
 
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
-        alertDialogBuilder.setTitle("Info");
-        alertDialogBuilder.setIcon(android.R.drawable.ic_dialog_alert);
-        alertDialogBuilder.setMessage("Server connection failed, Cross check your internet connectivity, or make sure your server is running and try again");
-        alertDialogBuilder.setPositiveButton("Ok",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface arg0, int arg1) {
-
-                        //Intent intent = new Intent(getApplicationContext(), ItemListActivity.class);
-                    }
-                });
-
-
-        AlertDialog alertDialog = alertDialogBuilder.create();
-        alertDialog.show();
-    }
 }

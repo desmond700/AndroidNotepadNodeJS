@@ -98,24 +98,15 @@ public class HttpRequest {
     }
 
     public String json(HttpRequest.Method method) throws IOException{
-
-        //testConnect();
-
         con.setDoInput(true);
         con.setRequestProperty("Content-Type", "application/json");
         con.setRequestMethod(method.toString());
-        Log.d("tessst","testing");
-        Boolean isConnected = testConnect();
-        Log.d("tessstcon",Boolean.toString(isConnected));
-        if(isConnected) {
-            BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream()));
-            StringBuilder response = new StringBuilder();
-            for (String line; (line = br.readLine()) != null; ) response.append(line + "\n");
-            Log.d("ressss", response.toString());
-            return response.toString();
-        }
+        BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream()));
+        StringBuilder response = new StringBuilder();
+        for (String line; (line = br.readLine()) != null; ) response.append(line + "\n");
+        Log.d("ressss", response.toString());
 
-        return "CONNECTIONFAILED";
+        return response.toString();
     }
 
      public int postData (HttpRequest.Method method, Note note) throws IOException, JSONException {
@@ -192,21 +183,6 @@ public class HttpRequest {
             con.setRequestProperty(h[0],h[1]);
         }
         return this;
-    }
-
-    public Boolean testConnect() {
-        Boolean val;
-        try {
-            Boolean connectionOK = HttpURLConnection.HTTP_OK == con.getResponseCode();
-            Log.d("Connection status","OK");
-            val = true;
-        } catch (IOException e) {
-            e.printStackTrace();
-            Log.d("Connection status","Error creating HTTP connection");
-            val = false;
-        }
-        Log.d("val", Boolean.toString(val));
-        return val;
     }
 
     /**
