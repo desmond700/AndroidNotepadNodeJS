@@ -12,18 +12,19 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.example.androidnotepadnodejs.util.Datetime;
+import com.example.androidnotepadnodejs.util.IsHostReachable;
 import com.example.androidnotepadnodejs.util.Note;
 import com.example.androidnotepadnodejs.util.HttpRetrieveNotesAsync;
 import com.github.clans.fab.FloatingActionButton;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,11 +52,13 @@ public class ItemListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_item_list);
 
-        AsyncTask<Void, Void, Boolean> task = new IsHostReachable(new AsyncResponse() {
+        AsyncTask<Void, Void, Boolean> task = new IsHostReachable(new IsHostReachable.AsyncResponse() {
             @Override
             public void processFinish(Boolean isConnected) {
                 if(isConnected){
                     retrieveNotes();
+                }else{
+                    noConnectionDialog();
                 }
             }
         });
@@ -84,6 +87,35 @@ public class ItemListActivity extends AppCompatActivity {
         }
 
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.item_list_menu, menu);
+
+        return true;
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        switch (item.getItemId()) {
+            case R.id.action_refresh:
+                finish();
+                overridePendingTransition(0, 0);
+                startActivity(getIntent());
+                overridePendingTransition(0, 0);
+
+                return true;
+
+            default:
+                // If we got here, the user's action was not recognized.
+                // Invoke the superclass to handle it.
+                return super.onOptionsItemSelected(item);
+
+        }
     }
 
     public void retrieveNotes(){
@@ -189,45 +221,6 @@ public class ItemListActivity extends AppCompatActivity {
 
     public interface AsyncResponse{
         void processFinish(Boolean isConnected);
-    }
-
-    public class IsHostReachable extends AsyncTask<Void, Void, Boolean>  {
-
-        public AsyncResponse delegate;
-
-        public IsHostReachable(AsyncResponse delegate) {
-            this.delegate = delegate;
-        }
-
-        protected Boolean doInBackground(Void ...params) {
-            Log.d("isHostAvailable", "run");
-            Boolean isConnected = isHostAvailable("10.0.2.2", 3000,1000);
-
-            return isConnected;
-        }
-
-        protected void onPostExecute(Boolean result) {
-            //do something with response
-            Log.d("isHostAvailable", Boolean.toString(result));
-            delegate.processFinish(result);
-            if(!result){
-                noConnectionDialog();
-            }
-
-        }
-    };
-
-    public static boolean isHostAvailable(final String host, final int port, final int timeout) {
-        try (final Socket socket = new Socket()) {
-            final InetAddress inetAddress = InetAddress.getByName(host);
-            final InetSocketAddress inetSocketAddress = new InetSocketAddress(inetAddress, port);
-
-            socket.connect(inetSocketAddress, timeout);
-            return true;
-        } catch (java.io.IOException e) {
-            e.printStackTrace();
-            return false;
-        }
     }
 
     public void noConnectionDialog(){

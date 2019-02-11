@@ -1,18 +1,11 @@
 package com.example.androidnotepadnodejs;
 
-import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
-import android.database.SQLException;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
-import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.ShareActionProvider;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -23,7 +16,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.androidnotepadnodejs.util.Datetime;
 import com.example.androidnotepadnodejs.util.HttpAddNotesAsync;
@@ -114,7 +106,7 @@ public class NewNoteActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu, menu);
+        inflater.inflate(R.menu.new_note_menu, menu);
 
         return true;
     }
