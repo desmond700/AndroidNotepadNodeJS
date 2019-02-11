@@ -28,7 +28,7 @@ public class HttpAddNotesAsync extends AsyncTask<String, Void, Integer> {
     protected Integer doInBackground(String... contexts) {
         int response = 0;
         try {
-            HttpRequest req = new HttpRequest("http://10.0.2.2:3000/api/note");
+            HttpRequest req = new HttpRequest(URLConstants.HOST+":"+URLConstants.PORT+"/api/note");
             response = req.postData(HttpRequest.Method.POST, note);
         } catch (MalformedURLException e) {
             e.printStackTrace();

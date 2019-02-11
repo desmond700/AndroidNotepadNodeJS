@@ -35,7 +35,7 @@ public class HttpRetrieveNotesAsync extends AsyncTask<String, Void, String> {
     protected String doInBackground(String... params) {
         //context = params[0];
         try {
-            HttpRequest req = new HttpRequest("http://10.0.2.2:3000/api/notes");
+            HttpRequest req = new HttpRequest(URLConstants.HOST+":"+URLConstants.PORT+"/api/notes");
 
             response = req.json(HttpRequest.Method.GET);
             Log.d("response",response);

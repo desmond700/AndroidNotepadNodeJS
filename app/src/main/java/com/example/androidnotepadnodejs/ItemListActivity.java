@@ -219,10 +219,6 @@ public class ItemListActivity extends AppCompatActivity {
         }
     }
 
-    public interface AsyncResponse{
-        void processFinish(Boolean isConnected);
-    }
-
     public void noConnectionDialog(){
 
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);

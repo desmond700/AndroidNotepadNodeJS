@@ -2,9 +2,6 @@ package com.example.androidnotepadnodejs.util;
 
 import android.os.AsyncTask;
 import android.util.Log;
-
-import com.example.androidnotepadnodejs.ItemListActivity;
-
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -24,7 +21,7 @@ public class IsHostReachable extends AsyncTask<Void, Void, Boolean>  {
 
     protected Boolean doInBackground(Void ...params) {
         Log.d("isHostAvailable", "run");
-        Boolean isConnected = isHostAvailable("10.0.2.2", 3000,1000);
+        Boolean isConnected = isHostAvailable(URLConstants.HOST, Integer.parseInt(URLConstants.PORT),1000);
 
         return isConnected;
     }
@@ -36,8 +33,9 @@ public class IsHostReachable extends AsyncTask<Void, Void, Boolean>  {
     }
 
     public static boolean isHostAvailable(final String host, final int port, final int timeout) {
+        String hostname = host.substring(host.lastIndexOf('/')+1);
         try (final Socket socket = new Socket()) {
-            final InetAddress inetAddress = InetAddress.getByName(host);
+            final InetAddress inetAddress = InetAddress.getByName(hostname);
             final InetSocketAddress inetSocketAddress = new InetSocketAddress(inetAddress, port);
 
             socket.connect(inetSocketAddress, timeout);

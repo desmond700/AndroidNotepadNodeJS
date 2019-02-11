@@ -23,7 +23,7 @@ public class HttpDeleteNoteAsync extends AsyncTask<String, Void, Integer> {
     @Override
     protected Integer doInBackground(String... params) {
         try {
-            HttpRequest req = new HttpRequest("http://10.0.2.2:3000/api/note/"+note_id);
+            HttpRequest req = new HttpRequest(URLConstants.HOST+":"+URLConstants.PORT+"/api/note/"+note_id);
 
             response = req.deleteData(HttpRequest.Method.DELETE);
 
